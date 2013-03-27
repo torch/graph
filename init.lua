@@ -2,6 +2,9 @@
 graph = {}
 
 torch.include('graph','utils.lua')
+torch.include('graph','Node.lua')
+torch.include('graph','Edge.lua')
+
 
 --[[
 	Defines a graph and general operations on grpahs like topsort, 
@@ -19,7 +22,10 @@ end
 -- an edge has two fields, from and to that are inserted into the
 -- nodes table. the edge itself is inserted into the edges table.
 function Graph:add(edge)
-	if torch.typename(edge) == 'graph.Edge' then
+	if type(edge) ~= 'table' then
+		error('graph.Edge or {graph.Edges} expected')
+	end
+	if torch.typename(edge) then
 		-- add edge
 		if not self.edges[edge] then
 			table.insert(self.edges,edge)
@@ -36,14 +42,42 @@ function Graph:add(edge)
 			self.nodes[edge.to] = #self.nodes
 		end
 		-- add the edge to the node for parsing in nodes
-		edge.from:add(edge)
-	elseif type(edge) == 'table' then
+		edge.from:add(edge.to)
+	else
 		for i,e in ipairs(edge) do
 			self:add(e)
 		end
-	else
-		error('graph.Edge or {graph.Edges} expected')
 	end
+end
+
+-- Clone a Graph
+-- this will create new nodes, but will share the data.
+-- Note that primitive data types like numbers can not be shared
+function Graph:clone()
+	local clone = graph.Graph()
+	for i,e in ipairs(self.edges) do
+		local from = graph.Node(e.from.data)
+		local to   = graph.Node(e.to.data)
+		clone:add(graph.Edge(from,to))
+	end
+	return clone
+end
+
+
+-- It returns a new graph where the edges are reversed.
+-- The nodes share the data. Note that primitive data types can
+-- not be shared.
+function Graph:reverse()
+	local rg = graph.Graph()
+	local mapnodes = {}
+	for i,e in ipairs(self.edges) do
+		mapnodes[e.from] = mapnodes[e.from] or e.from.new(e.from.data)
+		mapnodes[e.to]   = mapnodes[e.to] or e.to.new(e.to.data)
+		local from = mapnodes[e.from]
+		local to   = mapnodes[e.to]
+		rg:add(graph.Edge(to,from))
+	end
+	return rg
 end
 
 --[[
@@ -59,10 +93,7 @@ function Graph:topsort()
 	end
 
 	-- reverse the graph
-	local rg = graph.Graph()
-	for i,edge in ipairs(edges) do
-		rg:add(graph.Edge(edge.to,edge.from))
-	end
+	local rg = self:reverse()
 
 	-- work on the sorted graph
 	local sortednodes = {}
@@ -75,6 +106,10 @@ function Graph:topsort()
 	-- run
 	for i,root in ipairs(rootnodes) do
 		root:dfs(function(node) table.insert(sortednodes,node) end)
+	end
+
+	if #sortednodes ~= #self.nodes then
+		print('Graph has cycles')
 	end
 	return sortednodes,rg,rootnodes
 end
@@ -98,17 +133,8 @@ function Graph:roots()
 	for root,i in pairs(rootnodes) do
 		table.insert(roots, root)
 	end
+	table.sort(roots,function(a,b) return rootnodes[a] < rootnodes[b] end )
 	return roots
-end
-
-function Graph:clone()
-	local mf = torch.MemoryFile()
-	mf:writeObject(self)
-	mf:synchronize()
-	mf:seek(1)
-	local clone = mf:readObject()
-	mf:close()
-	return clone
 end
 
 function Graph:todot()
@@ -119,113 +145,16 @@ function Graph:todot()
 	table.insert(str,'node [shape = circle]; ')
 	local nodelabels = {}
 	for i,node in ipairs(nodes) do
-		nodelabels[node] = node:label() or 'n' .. i
-		table.insert(str, ' ' .. nodelabels[node])
+		local l =  '"' .. (node:label() or 'n' .. i) .. '"'
+		l = l:gsub('\n','') 
+		nodelabels[node] = 'n' .. i
+		table.insert(str, '\n' .. nodelabels[node] .. '[label=' .. l .. '];')
 	end
-	table.insert(str,';\n')
+	table.insert(str,'\n')
 	for i,edge in ipairs(edges) do
 		table.insert(str,nodelabels[edge.from] .. ' -> ' .. nodelabels[edge.to] .. ';\n')
 	end
 	table.insert(str,'}')
 	return table.concat(str,'')
 end
-
---[[
-	A Directed Edge class
-	No methods, just two fields, from and to.
-]]--
-local Edge = torch.class('graph.Edge')
-
-function Edge:__init(from,to)
-	self.from = from
-	self.to = to
-end
-
---[[
-	Node class. This class is generally used with edge to add edges into a graph.
-	graph:add(graph.Edge(graph.Node(),graph.Node()))
-
-	But, one can also easily use this node class to create a graph. It will register
-	all the edges into its children table and one can parse the graph from any given node.
-	The drawback is there will be no global edge table and node table, which is mostly useful
-	to run algorithms on graphs. If all you need is just a data structure to store data and 
-	run DFS, BFS over the graph, then this method is also quick and nice.
---]]
-local Node = torch.class('graph.Node')
-
-function Node:__init(d,p)
-	self.data = d
-	self.children = {}
-	self.visited = false
-	self.marked = false
-end
-
-function Node:add(child)
-	if torch.typename(child) == 'graph.Node' then
-		table.insert(self.children,graph.Edge(self,child))
-	elseif torch.typename(child) == 'graph.Edge' then
-		table.insert(self.children, child)
-	elseif type(child) == 'table' then
-		for i,v in ipairs(child) do
-			self:add(v)
-		end
-	else
-		error('graph.Node|graph.Edge or {graph.Node|graph.Edge} expected')
-	end
-end
-
--- visitor
-function Node:visit(pre_func,post_func)
-	if not self.visited then
-		if pre_func then pre_func(self) end
-		for i,child in ipairs(self.children) do
-			child.to:visit(pre_func, post_func)
-		end
-		if post_func then post_func(self) end
-	end
-end
-
-function Node:label()
-	return tostring(self.data)
-end
-
-function Node:dfs(func)
-	local visitednodes = {}
-	local dfs_func = function(node)
-		func(node)
-		table.insert(visitednodes,node)
-	end
-	local dfs_func_pre = function(node)
-		node.visited = true
-	end
-	self:visit(dfs_func_pre, dfs_func)
-	for i,node in ipairs(visitednodes) do
-		node.visited = false
-	end
-end
-
-function Node:bfs(func)
-	local visitednodes = {}
-	local bfsnodes = {}
-	local bfs_func = function(node)
-		func(node)
-		for i,child in ipairs(node.children) do
-			if not child.to.marked then
-				child.to.marked = true
-				table.insert(bfsnodes,child.to)
-			end
-		end
-	end
-	table.insert(bfsnodes,self)
-	self.marked = true
-	while #bfsnodes > 0 do
-		local node = table.remove(bfsnodes,1)
-		table.insert(visitednodes,node)
-		bfs_func(node)
-	end
-	for i,node in ipairs(visitednodes) do
-		node.marked = false
-	end
-end
-
 

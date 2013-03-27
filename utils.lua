@@ -14,4 +14,5 @@ function graph.dot(g)
 	os.remove(fngv)
 	os.remove(fnsvg)
 	-- print(fngv,fnpng)
+	return qs
 end

@@ -3,7 +3,7 @@ CMAKE_MINIMUM_REQUIRED(VERSION 2.6 FATAL_ERROR)
 CMAKE_POLICY(VERSION 2.6)
 FIND_PACKAGE(Torch REQUIRED)
 
-SET(luasrc init.lua 
+SET(luasrc init.lua Node.lua Edge.lua
     utils.lua
     test.lua)
 

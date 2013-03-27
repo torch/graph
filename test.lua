@@ -14,10 +14,10 @@ g:add(graph.Edge(nend,root))
 
 local i = 0
 print('======= BFS ==========')
-root:bfs(function(node) i=i+1;print('i='..i);print(node)end)
+root:bfs(function(node) i=i+1;print('i='..i);print(node:label())end)
 print('======= DFS ==========')
 i = 0
-root:dfs(function(node) i=i+1;print('i='..i);print(node)end)
+root:dfs(function(node) i=i+1;print('i='..i);print(node:label())end)
 
 print('======= topsort ==========')
 s,rg,rn = g:topsort()
