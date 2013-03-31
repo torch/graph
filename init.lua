@@ -133,7 +133,7 @@ function Graph:roots()
 	for root,i in pairs(rootnodes) do
 		table.insert(roots, root)
 	end
-	table.sort(roots,function(a,b) return rootnodes[a] < rootnodes[b] end )
+	table.sort(roots,function(a,b) return self.nodes[a] < self.nodes[b] end )
 	return roots
 end
 
@@ -142,11 +142,10 @@ function Graph:todot()
 	local edges = self.edges
 	str = {}
 	table.insert(str,'digraph G {\n')
-	table.insert(str,'node [shape = circle]; ')
+	table.insert(str,'node [shape = oval]; ')
 	local nodelabels = {}
 	for i,node in ipairs(nodes) do
 		local l =  '"' .. (node:label() or 'n' .. i) .. '"'
-		l = l:gsub('\n','') 
 		nodelabels[node] = 'n' .. i
 		table.insert(str, '\n' .. nodelabels[node] .. '[label=' .. l .. '];')
 	end
