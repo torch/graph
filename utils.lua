@@ -1,18 +1,20 @@
 
 require 'qtsvg'
 
-function graph.dot(g)
+function graph.dot(g,fname)
 	local gv = g:todot()
-	local fngv = os.tmpname()
+	local fngv = (fname or os.tmpname()) .. '.dot'
 	local fgv = io.open(fngv,'w')
 	fgv:write(gv)
 	fgv:close()
-	local fnsvg = os.tmpname()
+	local fnsvg = (fname or os.tmpname()) .. '.svg'
 	os.execute('dot -Tsvg -o ' .. fnsvg .. ' ' .. fngv)
-	local qs = qt.QSvgWidget(fnsvg)
-	qs:show()
-	os.remove(fngv)
-	os.remove(fnsvg)
-	-- print(fngv,fnpng)
-	return qs
+	if not fname then
+		local qs = qt.QSvgWidget(fnsvg)
+		qs:show()
+		os.remove(fngv)
+		os.remove(fnsvg)
+		-- print(fngv,fnpng)
+		return qs
+	end
 end
