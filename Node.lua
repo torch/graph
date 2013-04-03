@@ -13,6 +13,7 @@ local Node = torch.class('graph.Node')
 
 function Node:__init(d,p)
 	self.data = d
+	self.id = 0
 	self.children = {}
 	self.visited = false
 	self.marked = false

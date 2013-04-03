@@ -1,8 +1,8 @@
 
 require 'qtsvg'
 
-function graph.dot(g,fname)
-	local gv = g:todot()
+function graph.dot(g,title,fname)
+	local gv = g:todot(title)
 	local fngv = (fname or os.tmpname()) .. '.dot'
 	local fgv = io.open(fngv,'w')
 	fgv:write(gv)
