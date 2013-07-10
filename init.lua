@@ -103,7 +103,7 @@ function Graph:topsort()
 	local rootnodes = rg:roots()
 
 	if #rootnodes == 0 then
-		print('Graph has cycles')
+		error('Graph has cycles')
 	end
 
 	-- run
@@ -112,7 +112,7 @@ function Graph:topsort()
 	end
 
 	if #sortednodes ~= #self.nodes then
-		print('Graph has cycles')
+		error('Graph has cycles')
 	end
 	return sortednodes,rg,rootnodes
 end
