@@ -166,7 +166,7 @@ end
 function Graph:todot(title)
 	local nodes = self.nodes
 	local edges = self.edges
-	str = {}
+	local str = {}
 	table.insert(str,'digraph G {\n')
 	if title then
 		table.insert(str,'labelloc="t";\nlabel="' .. title .. '";\n')
