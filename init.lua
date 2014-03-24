@@ -1,3 +1,4 @@
+require 'torch'
 
 graph = {}
 
