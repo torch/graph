@@ -1,5 +1,5 @@
 require 'graph'
-dofile 'utils.lua'
+dofile 'graphviz.lua'
 
 g=graph.Graph()
 root=graph.Node(10)

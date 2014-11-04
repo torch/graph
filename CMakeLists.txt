@@ -4,7 +4,7 @@ CMAKE_POLICY(VERSION 2.6)
 FIND_PACKAGE(Torch REQUIRED)
 
 SET(luasrc init.lua Node.lua Edge.lua
-    utils.lua
+    graphviz.lua
     test.lua)
 
 ADD_TORCH_PACKAGE(graph ""  "${luasrc}" "General Graph Package")

@@ -2,7 +2,7 @@ require 'torch'
 
 graph = {}
 
-torch.include('graph','utils.lua')
+torch.include('graph','graphviz.lua')
 torch.include('graph','Node.lua')
 torch.include('graph','Edge.lua')
 
