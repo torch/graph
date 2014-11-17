@@ -21,4 +21,4 @@ function tests.layout()
                     "y coordinates should be ordered")
 end
 
-tester:add(tests):run()
+return tester:add(tests):run()
