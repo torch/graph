@@ -164,6 +164,30 @@ function Graph:leaves()
 	return leaves
 end
 
+
+function graph._dotEscape(str)
+  if string.find(str, '[^a-zA-Z]') then
+    -- Escape newlines.
+    local escaped = string.gsub(str, '\n', '\\n')
+    str = '"' .. escaped .. '"'
+  end
+  return str
+end
+
+
+--[[ Generate a string like 'color=blue tailport=s' from a table
+  (e.g. {color = 'blue', tailport = 's'}. Its up to the user to escape
+  strings properly.
+]]
+local function makeAttributeString(attributes)
+  str = {}
+  for k, v in pairs(attributes) do
+    table.insert(str, tostring(k) .. '=' .. graph._dotEscape(tostring(v)))
+  end
+  return ' ' .. table.concat(str, ' ')
+end
+
+
 function Graph:todot(title)
 	local nodes = self.nodes
 	local edges = self.edges
@@ -175,9 +199,21 @@ function Graph:todot(title)
 	table.insert(str,'node [shape = oval]; ')
 	local nodelabels = {}
 	for i,node in ipairs(nodes) do
-		local l =  '"' .. ( 'Node' .. node.id .. '\\n' .. node:label() ) .. '"'
+                local nodeName
+                if node.graphName then
+                  nodeName = node:graphName()
+                else
+                  nodeName = 'Node' .. node.id
+                end
+		local l =  graph._dotEscape(nodeName .. '\n' .. node:label())
 		nodelabels[node] = 'n' .. node.id
-		table.insert(str, '\n' .. nodelabels[node] .. '[label=' .. l .. '];')
+                local graphAttributes = ''
+                if node.graphAttributes then
+                  graphAttributes = makeAttributeString(node:graphAttributes())
+                end
+		table.insert(str,
+                             '\n' .. nodelabels[node] ..
+                             '[label=' .. l .. graphAttributes .. '];')
 	end
 	table.insert(str,'\n')
 	for i,edge in ipairs(edges) do
