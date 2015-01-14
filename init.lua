@@ -200,16 +200,17 @@ function Graph:todot(title)
 	local nodelabels = {}
 	for i,node in ipairs(nodes) do
                 local nodeName
-                if node.graphName then
-                  nodeName = node:graphName()
+                if node.graphNodeName then
+                  nodeName = node:graphNodeName()
                 else
                   nodeName = 'Node' .. node.id
                 end
 		local l =  graph._dotEscape(nodeName .. '\n' .. node:label())
 		nodelabels[node] = 'n' .. node.id
                 local graphAttributes = ''
-                if node.graphAttributes then
-                  graphAttributes = makeAttributeString(node:graphAttributes())
+                if node.graphNodeAttributes then
+                  graphAttributes = makeAttributeString(
+                      node:graphNodeAttributes())
                 end
 		table.insert(str,
                              '\n' .. nodelabels[node] ..
