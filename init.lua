@@ -167,8 +167,9 @@ end
 
 function graph._dotEscape(str)
   if string.find(str, '[^a-zA-Z]') then
-    -- Escape newlines.
+    -- Escape newlines and quotes.
     local escaped = string.gsub(str, '\n', '\\n')
+    escaped = string.gsub(escaped, '"', '\\"')
     str = '"' .. escaped .. '"'
   end
   return str
@@ -180,7 +181,7 @@ end
   strings properly.
 ]]
 local function makeAttributeString(attributes)
-  str = {}
+  local str = {}
   for k, v in pairs(attributes) do
     table.insert(str, tostring(k) .. '=' .. graph._dotEscape(tostring(v)))
   end

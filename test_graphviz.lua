@@ -30,6 +30,8 @@ function tests.testDotEscape()
                 'Use quotes for non-alpha characters')
   tester:assert(graph._dotEscape('My\nnewline') == '"My\\nnewline"',
                 'Escape newlines')
+  tester:assert(graph._dotEscape('Say "hello"') == '"Say \\"hello\\""',
+                'Escape quotes')
 end
 
 
