@@ -88,7 +88,7 @@ where `n` is the number of nodes in the graph.
 Coordinates are in the interval [0, 1].
 
 ]]
-function graph.graphvizLayout(g, algorithm, fname)
+function graph.graphvizLayout(g, algorithm)
 	if not graphvizOk or not cgraphOk then
 		error("graphviz library could not be loaded.")
 	end
@@ -98,9 +98,7 @@ function graph.graphvizLayout(g, algorithm, fname)
 	local algorithm = algorithm or "dot"
 	assert(0 == graphviz.gvLayout(context, graphvizGraph, algorithm),
 	       "graphviz layout failed")
-	-- the algorithm that is passed is a loyout algorithm not a rendering
-	-- format, which is typically like png, svg or dot
-	assert(0 == graphviz.gvRender(context, graphvizGraph, 'dot', nil),
+	assert(0 == graphviz.gvRender(context, graphvizGraph, algorithm, nil),
 	       "graphviz render failed")
 
 	-- Extract bounding box.
@@ -119,19 +117,6 @@ function graph.graphvizLayout(g, algorithm, fname)
 		positions[id][2] = y
 	end
 
-	-- if a file name is given, then render to that file
-	if fname then
-		local context = graphviz.gvContext()
-		local graphvizGraph = cgraph.agmemread(g:todot())
-		assert(0 == graphviz.gvLayout(context, graphvizGraph, algorithm),
-		       "graphviz layout failed")
-		assert(0 == graphviz.gvRender(context, graphvizGraph, 'svg', io.open(fname .. '.svg','w')),
-			   "graphviz render failed")
-		graphviz.gvFreeLayout(context, graphvizGraph)
-		cgraph.agclose(graphvizGraph)
-		graphviz.gvFreeContext(context)
-	end
-
 	-- Clean up.
 	graphviz.gvFreeLayout(context, graphvizGraph)
 	cgraph.agclose(graphvizGraph)
@@ -141,15 +126,20 @@ end
 
 
 function graph.dot(g,title,fname)
-	local qt_display = fname == nil
-	fname = fname or os.tmpname()
-	local fnsvg = fname .. '.svg'
-	graph.graphvizLayout(g, 'dot', fname)
-	if qt_display then
+	local gv = g:todot(title)
+	local fngv = (fname or os.tmpname()) .. '.dot'
+	local fgv = io.open(fngv,'w')
+	fgv:write(gv)
+	fgv:close()
+	local fnsvg = (fname or os.tmpname()) .. '.svg'
+	os.execute('dot -Tsvg -o ' .. fnsvg .. ' ' .. fngv)
+	if not fname then
 		require 'qtsvg'
-		local qs = qt.QSvgWidget(fname .. '.svg')
+		local qs = qt.QSvgWidget(fnsvg)
 		qs:show()
+		os.remove(fngv)
 		os.remove(fnsvg)
+		-- print(fngv,fnpng)
 		return qs
 	end
 end
