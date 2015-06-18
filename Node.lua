@@ -11,7 +11,7 @@
 --]]
 local Node = torch.class('graph.Node')
 
-function Node:__init(d,p)
+function Node:__init(d)
 	self.data = d
 	self.id = 0
 	self.children = {}
@@ -103,3 +103,5 @@ function Node:bfs(func)
 		node.marked = false
 	end
 end
+
+

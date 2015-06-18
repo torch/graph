@@ -70,8 +70,8 @@ end
 -- Retrieve a node's ID based on its label string.
 local function getID(node)
 	local label = getAttribute(node, 'label')
-	local _, _, id = string.find(label, "^Node(%d+)")
-	assert(id ~= nil, "could not get ID from node label")
+	local _, _, id = string.find(label, "^Node(%d+)") or string.find(label, "%((%d+)%)\\n")
+	-- assert(id ~= nil, "could not get ID from node label")
 	return tonumber(id)
 end
 
@@ -115,21 +115,10 @@ function graph.graphvizLayout(g, algorithm, fname)
 	for node in nodeIterator(graphvizGraph) do
 		local id = getID(node)
 		local x, y = getRelativePosition(node, bbox)
-		positions[id][1] = x
-		positions[id][2] = y
-	end
-
-	-- if a file name is given, then render to that file
-	if fname then
-		local context = graphviz.gvContext()
-		local graphvizGraph = cgraph.agmemread(g:todot())
-		assert(0 == graphviz.gvLayout(context, graphvizGraph, algorithm),
-		       "graphviz layout failed")
-		assert(0 == graphviz.gvRender(context, graphvizGraph, 'svg', io.open(fname .. '.svg','w')),
-			   "graphviz render failed")
-		graphviz.gvFreeLayout(context, graphvizGraph)
-		cgraph.agclose(graphvizGraph)
-		graphviz.gvFreeContext(context)
+		if id then
+			positions[id][1] = x
+			positions[id][2] = y
+		end
 	end
 
 	-- Clean up.
@@ -139,17 +128,114 @@ function graph.graphvizLayout(g, algorithm, fname)
 	return positions
 end
 
+function graph.graphvizFile(g, algorithm, fname)
+	algorithm = algorithm or 'dot'
+	local _,_,rendertype = fname:reverse():find('(%a+)%.%w+')
+	rendertype = rendertype:reverse()
 
+	local context = graphviz.gvContext()
+	local graphvizGraph = cgraph.agmemread(g:todot())
+	assert(0 == graphviz.gvLayout(context, graphvizGraph, algorithm),
+	       "graphviz layout failed")
+	assert(0 == graphviz.gvRender(context, graphvizGraph, rendertype, io.open(fname, 'w')),
+		   "graphviz render failed")
+	graphviz.gvFreeLayout(context, graphvizGraph)
+	cgraph.agclose(graphvizGraph)
+	graphviz.gvFreeContext(context)
+end
+
+--[[
+Given a graph, dump an SVG or display it using graphviz.
+
+Args:
+* `g` - graph to display
+* `title` - Title to display in the graph
+* `fname` - [optional] if given it should contain a file name without an extension,
+   the graph is saved on disk as fname.svg and display is not shown. If not given
+   the graph is shown on qt display (you need to have qtsvg installed and running qlua)
+
+Returns:
+* `qs` - the window handle for the qt display (if fname given) or nil
+]]
 function graph.dot(g,title,fname)
 	local qt_display = fname == nil
 	fname = fname or os.tmpname()
 	local fnsvg = fname .. '.svg'
-	graph.graphvizLayout(g, 'dot', fname)
+	local fndot = fname .. '.dot'
+	graph.graphvizFile(g, 'dot', fnsvg)
+	graph.graphvizFile(g, 'dot', fndot)
 	if qt_display then
 		require 'qtsvg'
 		local qs = qt.QSvgWidget(fname .. '.svg')
 		qs:show()
 		os.remove(fnsvg)
+		os.remove(fndot)
 		return qs
 	end
+end
+
+
+local function dotEscape(str)
+	if string.find(str, '[^a-zA-Z]') then
+		-- Escape newlines and quotes.
+		local escaped = string.gsub(str, '\n', '\\n')
+		escaped = string.gsub(escaped, '"', '\\"')
+		str = '"' .. escaped .. '"'
+	end
+	return str
+end
+graph._dotEscape = dotEscape
+
+--[[ Generate a string like 'color=blue tailport=s' from a table
+  (e.g. {color = 'blue', tailport = 's'}. Its up to the user to escape
+  strings properly.
+]]
+local function makeAttributeString(attributes)
+	local str = {}
+	for k, v in pairs(attributes) do
+		table.insert(str, tostring(k) .. '=' .. dotEscape(tostring(v)))
+	end
+	return ' ' .. table.concat(str, ' ')
+end
+
+
+local Graph = torch.getmetatable('graph.Graph')
+--[[
+todot function for graph class, one can use graphviz to display the graph or save on disk
+
+Args:
+* `title` - title to display on the graph
+ ]]--
+function Graph:todot(title)
+
+	local nodes = self.nodes
+	local edges = self.edges
+	local str = {}
+	table.insert(str,'digraph G {\n')
+	if title then
+		table.insert(str,'labelloc="t";\nlabel="' .. title .. '";\n')
+	end
+	table.insert(str,'node [shape = oval]; ')
+	local nodelabels = {}
+	for i,node in ipairs(nodes) do
+		local nodeName
+		if node.graphNodeName then
+			nodeName = node:graphNodeName()
+		else
+			nodeName = 'Node' .. node.id
+		end
+		local l = dotEscape(nodeName .. '\n' .. node:label())
+		nodelabels[node] = 'n' .. node.id
+		local graphAttributes = ''
+		if node.graphNodeAttributes then
+			graphAttributes = makeAttributeString(node:graphNodeAttributes())
+		end
+		table.insert(str, '\n' .. nodelabels[node] .. '[label=' .. l .. graphAttributes .. '];')
+	end
+	table.insert(str,'\n')
+	for i,edge in ipairs(edges) do
+		table.insert(str,nodelabels[edge.from] .. ' -> ' .. nodelabels[edge.to] .. ';\n')
+	end
+	table.insert(str,'}')
+	return table.concat(str,'')
 end
