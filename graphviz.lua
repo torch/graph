@@ -88,7 +88,7 @@ where `n` is the number of nodes in the graph.
 Coordinates are in the interval [0, 1].
 
 ]]
-function graph.graphvizLayout(g, algorithm, fname)
+function graph.graphvizLayout(g, algorithm)
 	if not graphvizOk or not cgraphOk then
 		error("graphviz library could not be loaded.")
 	end
@@ -98,9 +98,7 @@ function graph.graphvizLayout(g, algorithm, fname)
 	local algorithm = algorithm or "dot"
 	assert(0 == graphviz.gvLayout(context, graphvizGraph, algorithm),
 	       "graphviz layout failed")
-	-- the algorithm that is passed is a loyout algorithm not a rendering
-	-- format, which is typically like png, svg or dot
-	assert(0 == graphviz.gvRender(context, graphvizGraph, 'dot', nil),
+	assert(0 == graphviz.gvRender(context, graphvizGraph, algorithm, nil),
 	       "graphviz render failed")
 
 	-- Extract bounding box.
@@ -115,10 +113,8 @@ function graph.graphvizLayout(g, algorithm, fname)
 	for node in nodeIterator(graphvizGraph) do
 		local id = getID(node)
 		local x, y = getRelativePosition(node, bbox)
-		if id then
-			positions[id][1] = x
-			positions[id][2] = y
-		end
+		positions[id][1] = x
+		positions[id][2] = y
 	end
 
 	-- Clean up.
@@ -166,7 +162,7 @@ function graph.dot(g,title,fname)
 	graph.graphvizFile(g, 'dot', fndot)
 	if qt_display then
 		require 'qtsvg'
-		local qs = qt.QSvgWidget(fname .. '.svg')
+		local qs = qt.QSvgWidget(fnsvg)
 		qs:show()
 		os.remove(fnsvg)
 		os.remove(fndot)
