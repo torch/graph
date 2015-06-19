@@ -3,6 +3,15 @@ require 'debug'
 
 local Node, parent = torch.class('graph.AnnotatedNode', 'graph.Node')
 
+--[[
+AnnotatedNode class adds general debug info and capability to add annotations to the graph nodes
+
+Args:
+* `data` - data table to be contained in the node. The node does not create a copy, but just points
+to the given table.
+* `infolevel` - the level to use with debug.getinfo. Level 2 corresponds function creating an
+instance of the AnnotatedNode. (default=2)
+]]
 function Node:__init(data, infoLevel)
 	-- level 2 is the calling function
 	infoLevel = infoLevel or 2
@@ -16,6 +25,9 @@ function Node:__init(data, infoLevel)
 	end
 end
 
+--[[
+Add a set of annotation key/value pairs to store in the data table.
+]]
 function Node:annotate(annotations)
 	self.data = self.data or {}
 	for k, v in pairs(annotations) do

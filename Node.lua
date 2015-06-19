@@ -11,7 +11,21 @@
 --]]
 local Node = torch.class('graph.Node')
 
-function Node:__init(d)
+--[[
+Node class
+
+It is the building block of the graph structure. It contains 
+ `data` which is given as an argument to the constructor
+ `id` which is default to 0, but when the graph is built using Graph class, the ids are set with global consistency.
+ `children` a table that contains the set of children in the order they are added.
+ `visited` boolean flag that is used by DFS/BFS algorithms to mark if this node is visited.
+ `marked` boolean flag that is used by DFS/BFS algorithms to color the node.
+Args:
+* `data` - data table to be contained in the node. The node does not create a copy, but just points
+to the given table.
+]]
+function Node:__init(data)
+	assert(type(d) == 'table' and not torch.typename(d), 'expecting a table for data')
 	self.data = d
 	self.id = 0
 	self.children = {}
@@ -19,6 +33,12 @@ function Node:__init(d)
 	self.marked = false
 end
 
+--[[
+Add one more child node(s) to this node.
+
+Args:
+* `child` - an instance of a graph node or a table of instances.
+]]
 function Node:add(child)
 	local children = self.children
 	if type(child) == 'table' and not torch.typename(child) then
@@ -31,7 +51,13 @@ function Node:add(child)
 	end
 end
 
--- visitor
+--[[
+Interface for visitor objects.
+
+Args:
+* `pre_func` - run before calling visit on children
+* `post_func` - run after calling visit on children
+]]
 function Node:visit(pre_func,post_func)
 	if not self.visited then
 		if pre_func then pre_func(self) end
@@ -42,11 +68,21 @@ function Node:visit(pre_func,post_func)
 	end
 end
 
+--[[
+Return a string representation for the node. Default to 
+calling
+
+```lua
+tostring(self.data)
+```
+]]
 function Node:label()
 	return tostring(self.data)
 end
 
--- Create a graph from the Node traversal
+--[[
+Create a graph by traversal starting from this Node
+]]
 function Node:graph()
 	local g = graph.Graph()
 	local function build_graph(node)
@@ -70,6 +106,12 @@ function Node:dfs_dirty(func)
 	self:visit(dfs_func_pre, dfs_func)
 	return visitednodes
 end
+
+--[[
+Depth First Search traversal over the graph starting from this node.
+Args:
+ `func` - The function that is run on every node during traversal.
+]]
 function Node:dfs(func)
 	for i,node in ipairs(self:dfs_dirty(func)) do
 		node.visited = false
@@ -98,6 +140,11 @@ function Node:bfs_dirty(func)
 	return visitednodes
 end
 
+--[[
+Breadth First Search tarversal over the graph starting at this node.
+Args:
+ `func` - The function that is run on every node during traversal.
+]]
 function Node:bfs(func)
 	for i,node in ipairs(self:bfs_dirty(func)) do
 		node.marked = false

@@ -1,5 +1,5 @@
 --[[
-	Defines a graph and general operations on grpahs like topsort, 
+	Defines a graph and general operations on graphs like topsort, 
 	connected components, ...
 	uses two tables, one for nodes, one for edges
 ]]--
@@ -10,9 +10,12 @@ function Graph:__init()
 	self.edges = {}
 end
 
--- add a new edge into the graph.
--- an edge has two fields, from and to that are inserted into the
--- nodes table. the edge itself is inserted into the edges table.
+--[[
+Add a new edge into the graph.
+
+Args:
+* `edge` - The edge that is inserted into the edges table.
+]]
 function Graph:add(edge)
 	if type(edge) ~= 'table' then
 		error('graph.Edge or {graph.Edges} expected')
@@ -44,9 +47,11 @@ function Graph:add(edge)
 	end
 end
 
--- Clone a Graph
--- this will create new nodes, but will share the data.
--- Note that primitive data types like numbers can not be shared
+--[[
+Clone a Graph
+This will create new nodes, but will share the data.
+Note that primitive data types like numbers can not be shared.
+]]
 function Graph:clone()
 	local clone = graph.Graph()
 	local nodes = {}
@@ -61,9 +66,11 @@ function Graph:clone()
 	return clone
 end
 
--- It returns a new graph where the edges are reversed.
--- The nodes share the data. Note that primitive data types can
--- not be shared.
+--[[
+It returns a new graph where the edges are reversed.
+The nodes share the data. Note that primitive data types can
+not be shared.
+]]
 function Graph:reverse()
 	local rg = graph.Graph()
 	local mapnodes = {}
@@ -109,7 +116,9 @@ function Graph:topsort()
 	return sortednodes,rg,rootnodes
 end
 
--- find root nodes
+--[[
+Find and return the root nodes.
+]]
 function Graph:roots()
 	local edges = self.edges
 	local rootnodes = {}
@@ -132,7 +141,9 @@ function Graph:roots()
 	return roots
 end
 
--- find root nodes
+--[[
+Find and return the leaf nodes.
+]]
 function Graph:leaves()
 	local edges = self.edges
 	local leafnodes = {}
