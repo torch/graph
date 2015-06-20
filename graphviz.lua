@@ -70,8 +70,9 @@ end
 -- Retrieve a node's ID based on its label string.
 local function getID(node)
 	local label = getAttribute(node, 'label')
-	local _, _, id = string.find(label, "^Node(%d+)")
-	assert(id ~= nil, "could not get ID from node label")
+	local res = {string.find(label, "^Node(%d+)")} or {string.find(label, "%((%d+)%)\\n")}
+	local id = res[3]
+	assert(id ~= nil, "could not get ID from node label : <" .. tostring(label) .. ">")
 	return tonumber(id)
 end
 
@@ -124,22 +125,48 @@ function graph.graphvizLayout(g, algorithm)
 	return positions
 end
 
+function graph.graphvizFile(g, algorithm, fname)
+	algorithm = algorithm or 'dot'
+	local _,_,rendertype = fname:reverse():find('(%a+)%.%w+')
+	rendertype = rendertype:reverse()
 
+	local context = graphviz.gvContext()
+	local graphvizGraph = cgraph.agmemread(g:todot())
+	assert(0 == graphviz.gvLayout(context, graphvizGraph, algorithm),
+	       "graphviz layout failed")
+	assert(0 == graphviz.gvRender(context, graphvizGraph, rendertype, io.open(fname, 'w')),
+		   "graphviz render failed")
+	graphviz.gvFreeLayout(context, graphvizGraph)
+	cgraph.agclose(graphvizGraph)
+	graphviz.gvFreeContext(context)
+end
+
+--[[
+Given a graph, dump an SVG or display it using graphviz.
+
+Args:
+* `g` - graph to display
+* `title` - Title to display in the graph
+* `fname` - [optional] if given it should contain a file name without an extension,
+   the graph is saved on disk as fname.svg and display is not shown. If not given
+   the graph is shown on qt display (you need to have qtsvg installed and running qlua)
+
+Returns:
+* `qs` - the window handle for the qt display (if fname given) or nil
+]]
 function graph.dot(g,title,fname)
-	local gv = g:todot(title)
-	local fngv = (fname or os.tmpname()) .. '.dot'
-	local fgv = io.open(fngv,'w')
-	fgv:write(gv)
-	fgv:close()
-	local fnsvg = (fname or os.tmpname()) .. '.svg'
-	os.execute('dot -Tsvg -o ' .. fnsvg .. ' ' .. fngv)
-	if not fname then
+	local qt_display = fname == nil
+	fname = fname or os.tmpname()
+	local fnsvg = fname .. '.svg'
+	local fndot = fname .. '.dot'
+	graph.graphvizFile(g, 'dot', fnsvg)
+	graph.graphvizFile(g, 'dot', fndot)
+	if qt_display then
 		require 'qtsvg'
 		local qs = qt.QSvgWidget(fnsvg)
 		qs:show()
-		os.remove(fngv)
 		os.remove(fnsvg)
-		-- print(fngv,fnpng)
+		os.remove(fndot)
 		return qs
 	end
 end
