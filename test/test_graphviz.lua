@@ -5,21 +5,29 @@ local tester = totem.Tester()
 local tests = {}
 
 function tests.test_annotateGraph()
-    require 'nngraph'
-    local input = nn.Identity()():annotate({name = 'Input', description = 'DescA',
-      graphAttributes = {color = 'red'}})
 
-    local hidden_a = nn.Linear(10, 10)(input):annotate({name = 'Hidden A', description = 'DescB',
-      graphAttributes = {color = 'blue', fontcolor='green', tooltip = 'I am green'}})
-    local hidden_b = nn.Sigmoid()(hidden_a)
-    local output = nn.Linear(10, 10)(hidden_b)
-    local net = nn.gModule({input}, {output})
+    local input = graph.AnnotatedNode({}):annotate({name = 'Input',
+                                                    description = 'DescA',
+                                                    graphAttributes = {color = 'red'}})
+    local hidden_a = graph.AnnotatedNode({}):annotate({name = 'Hidden A',
+                                                       description = 'DescB',
+                                                       graphAttributes = {color = 'blue',
+                                                                          fontcolor='green',
+                                                                          tooltip = 'I am green'}})
+    local hidden_b = graph.AnnotatedNode({})
+    local output = graph.AnnotatedNode({})
+
+    hidden_a:add(input)
+    hidden_b:add(hidden_a)
+    output:add(hidden_b)
+    local bg = output:graph()
+    local fg = bg:reverse()
 
     tester:assert(hidden_a:label():match('DescB'))
     local fg_tmpfile = os.tmpname()
     local bg_tmpfile = os.tmpname()
-    graph.dot(net.fg, 'Test', fg_tmpfile)
-    graph.dot(net.fg, 'Test BG', bg_tmpfile)
+    graph.dot(fg, 'Test', fg_tmpfile)
+    graph.dot(bg, 'Test BG', bg_tmpfile)
 
     local function checkDotFile(tmpfile)
         local dotcontent = io.open(tmpfile .. '.dot', 'r'):read("*all")
@@ -46,10 +54,9 @@ function tests.layout()
     local positions = graph.graphvizLayout(g, 'dot')
     local xs = positions:select(2, 1)
     local ys = positions:select(2, 2)
-    tester:assertlt(xs:add(-xs:mean()):norm(), 1e-3,
-        "x coordinates should be the same")
-    tester:assertTensorEq(ys, torch.sort(ys, true), 1e-3,
-        "y coordinates should be ordered")
+
+    tester:assertlt(xs:add(-xs:mean()):norm(), 1e-3, "x coordinates should be the same")
+    tester:assertTensorEq(ys, torch.sort(ys, true), 1e-3, "y coordinates should be ordered")
 end
 
 function tests.testDotEscape()

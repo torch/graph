@@ -14,7 +14,8 @@ instance of the AnnotatedNode. (default=2)
 ]]
 function Node:__init(data, infoLevel)
 	-- level 2 is the calling function
-	infoLevel = infoLevel or 2
+	infoLevel = infoLevel or 4
+	assert(type(data) == 'table' and not torch.typename(d), 'expecting a table for data')
 	parent.__init(self, data)
 	self.data.annotations = self.data.annotations or {}
 	
@@ -50,5 +51,64 @@ function Node:graphNodeAttributes()
 		self.data.annotations.graphAttributes.tooltip = self.data.annotations._debugLabel
 	end
 	return self.data.annotations.graphAttributes
+end
+
+--[[
+Returns a textual representation of the Node that can be used by graphviz library visualization.
+]]
+function Node:label()
+
+	local function getNanFlag(data)
+		if data:nElement() == 0 then
+			return ''
+		end
+		local isNan = (data:ne(data):sum() > 0)
+		if isNan then
+			return 'NaN'
+		end
+		if data:max() == math.huge then
+			return 'inf'
+		end
+		if data:min() == -math.huge then
+			return '-inf'
+		end
+		return ''
+	end
+	local function getstr(data)
+		if not data then return '' end
+		if torch.isTensor(data) then
+			local nanFlag = getNanFlag(data)
+			local tensorType = 'Tensor'
+			if data:type() ~= torch.Tensor():type() then
+				tensorType = data:type()
+			end
+			return tensorType .. '[' .. table.concat(data:size():totable(),'x') .. ']' .. nanFlag
+		elseif not torch.isTensor(data) and type(data) == 'table' then
+			local tstr = {}
+			for i,v in ipairs(data) do
+				table.insert(tstr, getstr(v))
+			end
+			return '{' .. table.concat(tstr,',') .. '}'
+		else
+			return tostring(data):gsub('\n','\\l')
+		end
+	end
+	local lbl = {}
+
+	for k,v in pairs(self.data) do
+		local vstr = ''
+		if k == 'annotations' then
+			-- the forwardNodeId is not displayed in the label.
+		else
+			vstr = getstr(v)
+			table.insert(lbl, k .. ' = ' .. vstr)
+		end
+	end
+
+	local desc = ''
+	if self.data.annotations.description then
+		desc = 'desc = ' .. self.data.annotations.description .. '\\n'
+	end
+	return desc .. table.concat(lbl,"\\l")
 end
 

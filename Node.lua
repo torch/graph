@@ -25,8 +25,7 @@ Args:
 to the given table.
 ]]
 function Node:__init(data)
-	assert(type(d) == 'table' and not torch.typename(d), 'expecting a table for data')
-	self.data = d
+	self.data = data
 	self.id = 0
 	self.children = {}
 	self.visited = false

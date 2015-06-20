@@ -165,3 +165,68 @@ function Graph:leaves()
 	table.sort(leaves,function(a,b) return self.nodes[a] < self.nodes[b] end )
 	return leaves
 end
+
+
+--[[
+todot function for graph class, one can use graphviz to display the graph or save on disk
+
+Args:
+* `title` - title to display on the graph
+ ]]--
+function Graph:todot(title)
+
+	local function dotEscape(str)
+		if string.find(str, '[^a-zA-Z]') then
+			-- Escape newlines and quotes.
+			local escaped = string.gsub(str, '\n', '\\n')
+			escaped = string.gsub(escaped, '"', '\\"')
+			str = '"' .. escaped .. '"'
+		end
+		return str
+	end
+	graph._dotEscape = dotEscape
+
+	--[[ Generate a string like 'color=blue tailport=s' from a table
+	  (e.g. {color = 'blue', tailport = 's'}. Its up to the user to escape
+	  strings properly.
+	]]
+	local function makeAttributeString(attributes)
+		local str = {}
+		for k, v in pairs(attributes) do
+			table.insert(str, tostring(k) .. '=' .. dotEscape(tostring(v)))
+		end
+		return ' ' .. table.concat(str, ' ')
+	end
+
+	local nodes = self.nodes
+	local edges = self.edges
+	local str = {}
+	table.insert(str,'digraph G {\n')
+	if title then
+		table.insert(str,'labelloc="t";\nlabel="' .. title .. '";\n')
+	end
+	table.insert(str,'node [shape = oval]; ')
+	local nodelabels = {}
+	for i,node in ipairs(nodes) do
+		local nodeName
+		if node.graphNodeName then
+			nodeName = node:graphNodeName()
+		else
+			nodeName = 'Node' .. node.id
+		end
+		local l = dotEscape(nodeName .. '\n' .. node:label())
+		nodelabels[node] = 'n' .. node.id
+		local graphAttributes = ''
+		if node.graphNodeAttributes then
+			graphAttributes = makeAttributeString(node:graphNodeAttributes())
+		end
+		table.insert(str, '\n' .. nodelabels[node] .. '[label=' .. l .. graphAttributes .. '];')
+	end
+	table.insert(str,'\n')
+	for i,edge in ipairs(edges) do
+		table.insert(str,nodelabels[edge.from] .. ' -> ' .. nodelabels[edge.to] .. ';\n')
+	end
+	table.insert(str,'}')
+	return table.concat(str,'')
+end
+
