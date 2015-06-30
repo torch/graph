@@ -8,7 +8,7 @@ torch.include('graph','Edge.lua')
 
 
 --[[
-	Defines a graph and general operations on grpahs like topsort, 
+	Defines a graph and general operations on grpahs like topsort,
 	connected components, ...
 	uses two tables, one for nodes, one for edges
 ]]--
@@ -182,11 +182,18 @@ end
 ]]
 local function makeAttributeString(attributes)
   local str = {}
-  for k, v in pairs(attributes) do
+  local keys = {}
+  for k, _ in pairs(attributes) do
+    table.insert(keys, k)
+  end
+  table.sort(keys)
+  for _, k in ipairs(keys) do
+    local v = attributes[k]
     table.insert(str, tostring(k) .. '=' .. graph._dotEscape(tostring(v)))
   end
   return ' ' .. table.concat(str, ' ')
 end
+
 
 
 function Graph:todot(title)
