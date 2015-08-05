@@ -1,7 +1,15 @@
-local ffi = require 'ffi'
 require 'torch'
 
-ffi.cdef[[
+local ffiOk = false
+local graphvizOk = false
+local cgraphOk = false
+local ffi
+local graphviz
+local cgraph
+
+ffiOk, ffi = pcall(require, 'ffi')
+if ffiOk then
+    ffi.cdef[[
 typedef struct FILE FILE;
 
 typedef struct Agraph_s Agraph_t;
@@ -25,9 +33,13 @@ extern int gvRender(GVC_t *context, graph_t *g, const char *format, FILE *out);
 extern int gvFreeLayout(GVC_t *context, graph_t *g);
 extern int gvFreeContext(GVC_t *context);
 ]]
+    graphvizOk, graphviz = pcall(function() return ffi.load('libgvc') end)
+    cgraphOk, cgraph = pcall(function() return ffi.load('libcgraph') end)
+else
+    graphvizOk = false
+    cgraphOk = false
+end
 
-local graphvizOk, graphviz = pcall(function() return ffi.load('libgvc') end)
-local cgraphOk, cgraph = pcall(function() return ffi.load('libcgraph') end)
 
 -- Retrieve attribute data from a graphviz object.
 local function getAttribute(obj, name)
