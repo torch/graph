@@ -34,7 +34,14 @@ extern int gvFreeLayout(GVC_t *context, graph_t *g);
 extern int gvFreeContext(GVC_t *context);
 ]]
     graphvizOk, graphviz = pcall(function() return ffi.load('libgvc') end)
+    if not graphvizOk then
+      graphvizOk, graphviz = pcall(function() return ffi.load('libgvc.so.6') end)
+    end
+
     cgraphOk, cgraph = pcall(function() return ffi.load('libcgraph') end)
+    if not cgraphOk then
+      cgraphOk, cgraph = pcall(function() return ffi.load('libcgraph.so.6') end)
+    end
 else
     graphvizOk = false
     cgraphOk = false
