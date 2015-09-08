@@ -134,4 +134,33 @@ function tests.test_bfs()
    end
 end
 
+function tests.test_cycle()
+   local n1 = graph.Node(1)
+   local n2 = graph.Node(2)
+   local n3 = graph.Node(3)
+   local n4 = graph.Node(4)
+   local cycle = graph.Graph()
+   cycle:add(graph.Edge(n1, n2))
+   cycle:add(graph.Edge(n1, n3))
+   cycle:add(graph.Edge(n2, n3))
+   cycle:add(graph.Edge(n3, n2))
+   cycle:add(graph.Edge(n2, n4))
+   cycle:add(graph.Edge(n3, n4))
+
+   tester:asserteq(cycle:hasCycle(), true, 'Graph is supposed to have cycle')
+
+   local n1 = graph.Node(1)
+   local n2 = graph.Node(2)
+   local n3 = graph.Node(3)
+   local n4 = graph.Node(4)
+   local nocycle = graph.Graph()
+   nocycle:add(graph.Edge(n1, n2))
+   nocycle:add(graph.Edge(n1, n3))
+   nocycle:add(graph.Edge(n2, n3))
+   nocycle:add(graph.Edge(n2, n4))
+   nocycle:add(graph.Edge(n3, n4))
+
+   tester:asserteq(nocycle:hasCycle(), false, 'Graph is not supposed to have cycle')
+end
+
 return tester:add(tests):run()

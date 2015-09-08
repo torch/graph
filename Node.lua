@@ -103,3 +103,44 @@ function Node:bfs(func)
       node.marked = false
    end
 end
+
+function Node:hasCycle()
+
+   local hascycle = false
+   local explorednodes = {}
+
+   local function pre(node)
+      -- if someone found a cycle, just back up
+      if hascycle then return hascycle end
+      -- if this node was marked during dfs, then
+      -- it is still being explored, which means we hit a cycle.
+      if node.marked then
+         -- at this point set visited to true so that Node:visit() does
+         -- not explore this node again
+         node.visited = true
+         hascycle = true
+         return hascycle
+      end
+      node.marked = true
+   end
+
+   local function post(node)
+      -- we are done with this node, so just remove marked info
+      node.marked = false
+      -- set visited to true flagging that this node is done.
+      -- we might hit it in the future through a separate path, but 
+      -- at that point we should not explore it, the Node:visit()
+      -- will avoid visiting any visited node.
+      node.visited = true
+      explorednodes[node] = true
+   end
+
+   self:visit(pre, post)
+
+   -- now clean-up all the nodes
+   for node, _ in pairs(explorednodes) do
+      node.visited = false
+   end
+
+   return hascycle
+end
