@@ -86,6 +86,21 @@ function Graph:reverse()
    return rg,mapnodes
 end
 
+function Graph:hasCycle()
+
+   local roots = self:roots()
+   if #roots == 0 then
+      return true
+   end
+
+   for i, root in ipairs(roots) do
+      if root:hasCycle() then
+         return true
+      end
+   end
+   return false
+end
+
 --[[
 Topological Sort
 ** This is not finished. OK for graphs with single root.
