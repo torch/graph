@@ -103,9 +103,10 @@ end
 
 --[[
 Topological Sort
-** This is not finished. OK for graphs with single root.
 ]]--
 function Graph:topsort()
+
+   local dummyRoot
 
    -- reverse the graph
    local rg,map = self:reverse()
@@ -122,14 +123,24 @@ function Graph:topsort()
       error('Graph has cycles')
    end
 
-   -- run
-   for i,root in ipairs(rootnodes) do
-      root:dfs(function(node) table.insert(sortednodes,rmap[node]) end)
+   if #rootnodes > 1 then
+      dummyRoot = graph.Node('dummy_root')
+      for _, root in ipairs(rootnodes) do
+         dummyRoot:add(root)
+      end
+   else
+      dummyRoot = rootnodes[1]
    end
+
+   -- run
+   -- the trick is since the dummy node does not exist in original graph,
+   -- rmap[dummyRoot] = nil hence nothing gets inserted into the table
+   dummyRoot:dfs(function(node) table.insert(sortednodes,rmap[node]) end)
 
    if #sortednodes ~= #self.nodes then
       error('Graph has cycles')
    end
+
    return sortednodes,rg,rootnodes
 end
 

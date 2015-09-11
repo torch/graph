@@ -22,4 +22,4 @@ root:dfs(function(node) i=i+1;print('i='..i);print(node:label())end)
 print('======= topsort ==========')
 s,rg,rn = g:topsort()
 
-graph.dot(g)
+graph.dot(g, 'g', 'g')
