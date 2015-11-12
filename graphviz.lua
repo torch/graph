@@ -51,6 +51,7 @@ else
 end
 
 local unpack = unpack or table.unpack -- Lua52 compatibility
+local NULL = (not jit) and ffi.C.NULL or nil -- LuaJIT compatibility
 
 -- Retrieve attribute data from a graphviz object.
 local function getAttribute(obj, name)
@@ -64,8 +65,8 @@ local function nodeIterator(graph)
    local node = cgraph.agfstnode(graph)
    local nextNode
    return function()
-      if node == ffi.C.NULL then return end
-      if node == cgraph.aglstnode(graph) then nextNode = ffi.C.NULL end
+      if node == NULL then return end
+      if node == cgraph.aglstnode(graph) then nextNode = NULL end
       nextNode = cgraph.agnxtnode(graph, node)
       local result = node
       node = nextNode
@@ -123,7 +124,7 @@ function graph.graphvizLayout(g, algorithm)
    local algorithm = algorithm or "dot"
    assert(0 == graphviz.gvLayout(context, graphvizGraph, algorithm),
           "graphviz layout failed")
-   assert(0 == graphviz.gvRender(context, graphvizGraph, algorithm, ffi.C.NULL),
+   assert(0 == graphviz.gvRender(context, graphvizGraph, algorithm, NULL),
           "graphviz render failed")
 
    -- Extract bounding box.
