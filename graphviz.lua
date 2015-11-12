@@ -50,20 +50,22 @@ else
    cgraphOk = false
 end
 
+local unpack = unpack or table.unpack -- Lua52 compatibility
 
 -- Retrieve attribute data from a graphviz object.
 local function getAttribute(obj, name)
    local res = cgraph.agget(obj, ffi.cast("char*", name))
    assert(res ~= ffi.cast("char*", nil), 'could not get attr ' .. name)
-   return ffi.string(res)
+   local out = ffi.string(res)
+   return out
 end
 -- Iterate through nodes of a graphviz graph.
 local function nodeIterator(graph)
    local node = cgraph.agfstnode(graph)
    local nextNode
    return function()
-      if node == nil then return end
-      if node == cgraph.aglstnode(graph) then nextNode = nil end
+      if node == ffi.C.NULL then return end
+      if node == cgraph.aglstnode(graph) then nextNode = ffi.C.NULL end
       nextNode = cgraph.agnxtnode(graph, node)
       local result = node
       node = nextNode
@@ -120,13 +122,13 @@ function graph.graphvizLayout(g, algorithm)
    local graphvizGraph = cgraph.agmemread(g:todot())
    local algorithm = algorithm or "dot"
    assert(0 == graphviz.gvLayout(context, graphvizGraph, algorithm),
-   "graphviz layout failed")
-   assert(0 == graphviz.gvRender(context, graphvizGraph, algorithm, nil),
-   "graphviz render failed")
+          "graphviz layout failed")
+   assert(0 == graphviz.gvRender(context, graphvizGraph, algorithm, ffi.C.NULL),
+          "graphviz render failed")
 
    -- Extract bounding box.
-   local x0, y0, x1, y1 = extractNumbers(4,
-   getAttribute(graphvizGraph, 'bb'), ",")
+   local x0, y0, x1, y1
+      = extractNumbers(4, getAttribute(graphvizGraph, 'bb'), ",")
    local w = x1 - x0
    local h = y1 - y0
    local bbox = { x0, y0, w, h }
