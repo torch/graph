@@ -32,6 +32,9 @@ if ffiOk then
    extern int gvRender(GVC_t *context, graph_t *g, const char *format, FILE *out);
    extern int gvFreeLayout(GVC_t *context, graph_t *g);
    extern int gvFreeContext(GVC_t *context);
+
+   FILE * fopen ( const char * filename, const char * mode );
+   int fclose ( FILE * stream );
    ]]
    graphvizOk, graphviz = pcall(function() return ffi.load('libgvc') end)
    if not graphvizOk then
@@ -151,10 +154,15 @@ function graph.graphvizFile(g, algorithm, fname)
 
    local context = graphviz.gvContext()
    local graphvizGraph = cgraph.agmemread(g:todot())
+
    assert(0 == graphviz.gvLayout(context, graphvizGraph, algorithm),
-   "graphviz layout failed")
-   assert(0 == graphviz.gvRender(context, graphvizGraph, rendertype, io.open(fname, 'w')),
-   "graphviz render failed")
+          "graphviz layout failed")
+
+   local fhandle = ffi.C.fopen(fname, 'w')
+   local ret = graphviz.gvRender(context, graphvizGraph, rendertype, fhandle)
+   ffi.C.fclose(fhandle)
+   assert(0 == ret, "graphviz render failed")
+
    graphviz.gvFreeLayout(context, graphvizGraph)
    cgraph.agclose(graphvizGraph)
    graphviz.gvFreeContext(context)
