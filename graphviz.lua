@@ -148,6 +148,9 @@ function graph.graphvizLayout(g, algorithm)
 end
 
 function graph.graphvizFile(g, algorithm, fname)
+   if not graphvizOk or not cgraphOk then
+      error("graphviz library could not be loaded.")
+   end
    algorithm = algorithm or 'dot'
    local _,_,rendertype = fname:reverse():find('(%a+)%.%w+')
    rendertype = rendertype:reverse()
