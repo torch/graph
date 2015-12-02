@@ -1,8 +1,15 @@
-torch-graph
-===========
+# Graph Package
 
-Graph package for Torch
+This package provides graphical computation for [Torch](https://github.com/torch/torch7/blob/master/README.md).
 
-Requisites
----
-You might want to install [Graphviz](http://www.graphviz.org) to benefit from the vizualisation functions.
+
+## Requirements
+
+You need *not* `graphviz` to be able to use this library but, if you have it, you will be able to display the graphs that you have created. For installing the package run the appropriate command below:
+
+```bash
+# Mac users
+brew install graphviz
+# Debian/Ubuntu users
+sudo apt-get install graphviz -y
+```
