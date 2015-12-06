@@ -36,14 +36,14 @@ if ffiOk then
    FILE * fopen ( const char * filename, const char * mode );
    int fclose ( FILE * stream );
    ]]
-   graphvizOk, graphviz = pcall(function() return ffi.load('libgvc') end)
+   graphvizOk, graphviz = pcall(function() return ffi.load('libgvc', true) end)
    if not graphvizOk then
-      graphvizOk, graphviz = pcall(function() return ffi.load('libgvc.so.6') end)
+      graphvizOk, graphviz = pcall(function() return ffi.load('libgvc.so.6', true) end)
    end
 
-   cgraphOk, cgraph = pcall(function() return ffi.load('libcgraph') end)
+   cgraphOk, cgraph = pcall(function() return ffi.load('libcgraph', true) end)
    if not cgraphOk then
-      cgraphOk, cgraph = pcall(function() return ffi.load('libcgraph.so.6') end)
+      cgraphOk, cgraph = pcall(function() return ffi.load('libcgraph.so.6', true) end)
    end
 else
    graphvizOk = false
