@@ -2,9 +2,9 @@ require 'torch'
 
 graph = {}
 
-torch.include('graph','graphviz.lua')
-torch.include('graph','Node.lua')
-torch.include('graph','Edge.lua')
+require('graph.graphviz')
+require('graph.Node')
+require('graph.Edge')
 
 
 --[[
