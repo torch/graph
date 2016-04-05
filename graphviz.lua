@@ -51,7 +51,7 @@ else
 end
 
 local unpack = unpack or table.unpack -- Lua52 compatibility
-local NULL = (not jit) and ffi.C.NULL or nil -- LuaJIT compatibility
+local NULL = (ffiOk and (not jit)) and ffi.C.NULL or nil -- LuaJIT compatibility
 
 -- Retrieve attribute data from a graphviz object.
 local function getAttribute(obj, name)
