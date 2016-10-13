@@ -1,8 +1,7 @@
-require 'totem'
 require 'graph'
 require 'torch'
-local tester = totem.Tester()
-local tests = {}
+local tester = torch.Tester()
+local tests = torch.TestSuite()
 
 function tests.layout()
    local g = graph.Graph()
