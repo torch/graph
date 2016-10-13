@@ -1,9 +1,7 @@
-
 require 'graph'
-require 'totem'
-
-local tester = totem.Tester()
-local tests = {}
+require 'torch'
+local tester = torch.Tester()
+local tests = torch.TestSuite()
 
 local function create_graph(nlayers, ninputs, noutputs, nhiddens, droprate)
    local g = graph.Graph()

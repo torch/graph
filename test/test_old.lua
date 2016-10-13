@@ -10,7 +10,7 @@ g:add(graph.Edge(root,n2))
 nend = graph.Node(20)
 g:add(graph.Edge(n1,nend))
 g:add(graph.Edge(n2,nend))
-g:add(graph.Edge(nend,root))
+-- g:add(graph.Edge(nend,root))
 
 local i = 0
 print('======= BFS ==========')
