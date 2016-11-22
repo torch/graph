@@ -22,6 +22,7 @@ end
 
 function Node:add(child, weight)
    local children = self.children
+   local weights = self.weights
    if type(child) == 'table' and not torch.typename(child) then
       for i,v in ipairs(child) do
          self:add(v)
