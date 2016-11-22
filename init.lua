@@ -43,7 +43,7 @@ function Graph:add(edge)
          self.nodes[edge.to] = #self.nodes
       end
       -- add the edge to the node for parsing in nodes
-      edge.from:add(edge.to)
+      edge.from:add(edge.to, edge.weight)
       edge.from.id = self.nodes[edge.from]
       edge.to.id = self.nodes[edge.to]
    else
