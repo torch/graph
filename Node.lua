@@ -15,11 +15,12 @@ function Node:__init(d,p)
    self.data = d
    self.id = 0
    self.children = {}
+   self.weights = {}
    self.visited = false
    self.marked = false
 end
 
-function Node:add(child)
+function Node:add(child, weight)
    local children = self.children
    if type(child) == 'table' and not torch.typename(child) then
       for i,v in ipairs(child) do
@@ -28,6 +29,7 @@ function Node:add(child)
    elseif not children[child] then
       table.insert(children,child)
       children[child] = #children
+      weights[child] = weight
    end
 end
 
