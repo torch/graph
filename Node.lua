@@ -15,12 +15,14 @@ function Node:__init(d,p)
    self.data = d
    self.id = 0
    self.children = {}
+   self.weights = {}
    self.visited = false
    self.marked = false
 end
 
-function Node:add(child)
+function Node:add(child, weight)
    local children = self.children
+   local weights = self.weights
    if type(child) == 'table' and not torch.typename(child) then
       for i,v in ipairs(child) do
          self:add(v)
@@ -28,6 +30,7 @@ function Node:add(child)
    elseif not children[child] then
       table.insert(children,child)
       children[child] = #children
+      weights[child] = weight
    end
 end
 
@@ -51,7 +54,7 @@ function Node:graph()
    local g = graph.Graph()
    local function build_graph(node)
       for i,child in ipairs(node.children) do
-         g:add(graph.Edge(node,child))
+         g:add(graph.Edge(node,child, node.weights[child]))
       end
    end
    self:bfs(build_graph)

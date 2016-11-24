@@ -43,7 +43,7 @@ function Graph:add(edge)
          self.nodes[edge.to] = #self.nodes
       end
       -- add the edge to the node for parsing in nodes
-      edge.from:add(edge.to)
+      edge.from:add(edge.to, edge.weight)
       edge.from.id = self.nodes[edge.from]
       edge.to.id = self.nodes[edge.to]
    else
@@ -65,7 +65,7 @@ function Graph:clone()
    for i,e in ipairs(self.edges) do
       local from = nodes[self.nodes[e.from]]
       local to   = nodes[self.nodes[e.to]]
-      clone:add(e.new(from,to))
+      clone:add(e.new(from,to,e.from.weights[e.to]))
    end
    return clone
 end
@@ -81,7 +81,7 @@ function Graph:reverse()
       mapnodes[e.to]   = mapnodes[e.to] or e.to.new(e.to.data)
       local from = mapnodes[e.from]
       local to   = mapnodes[e.to]
-      rg:add(e.new(to,from))
+      rg:add(e.new(to,from,e.from.weights[e.to]))
    end
    return rg,mapnodes
 end
