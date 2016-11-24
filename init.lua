@@ -65,7 +65,7 @@ function Graph:clone()
    for i,e in ipairs(self.edges) do
       local from = nodes[self.nodes[e.from]]
       local to   = nodes[self.nodes[e.to]]
-      clone:add(e.new(from,to))
+      clone:add(e.new(from,to,e.from.weights[e.to]))
    end
    return clone
 end
