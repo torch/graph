@@ -54,7 +54,7 @@ function Node:graph()
    local g = graph.Graph()
    local function build_graph(node)
       for i,child in ipairs(node.children) do
-         g:add(graph.Edge(node,child))
+         g:add(graph.Edge(node,child, node.weights[child]))
       end
    end
    self:bfs(build_graph)
