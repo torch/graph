@@ -81,7 +81,7 @@ function Graph:reverse()
       mapnodes[e.to]   = mapnodes[e.to] or e.to.new(e.to.data)
       local from = mapnodes[e.from]
       local to   = mapnodes[e.to]
-      rg:add(e.new(to,from))
+      rg:add(e.new(to,from,e.from.weights[e.to]))
    end
    return rg,mapnodes
 end
